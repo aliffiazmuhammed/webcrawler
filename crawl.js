@@ -1,24 +1,46 @@
 const {JSDOM} = require('jsdom')
 
 
-const webcrawler = async(crawlurl)=>{
+const webcrawler = async(baseurl,crawlurl,pages)=>{
+
+    const baseurlobj = new URL(baseurl)
+    const crawlurlobj = new URL(crawlurl)
+
+    if(baseurlobj.hostname !== crawlurlobj.hostname){
+        return pages
+    }
+    const normalisedurl = normaliseurl(crawlurl)
+    if(pages[normalisedurl]>0){
+        pages[normalisedurl]++
+        return pages
+    }
+
+    pages[normalisedurl] = 1
+
     try{
         const page = await fetch(crawlurl)
+       
         if(page.status>399){
             console.log("cannot fetch url:bad connection")
-            return
+            return pages
         }
         const contenttype = page.headers.get('content-type')
+       
         if(!contenttype.includes('text/html')){
             console.log('content type not html')
-            return
+            return pages
         }
-        console.log(await page.text())
+        const htmlbody=await page.text()
+        const nexturls = geturlsfrom(htmlbody,baseurl)
+
+        for(const nexturl of nexturls){
+           pages= await webcrawler(baseurl,nexturl,pages)
+        }
 
     }catch{
         console.log("cannot fetch the url")
     }
-    
+    return pages
 }
 
 const geturlsfrom = (htmlbody,baseurl)=>{
