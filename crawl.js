@@ -1,5 +1,26 @@
 const {JSDOM} = require('jsdom')
 
+
+const webcrawler = async(crawlurl)=>{
+    try{
+        const page = await fetch(crawlurl)
+        if(page.status>399){
+            console.log("cannot fetch url:bad connection")
+            return
+        }
+        const contenttype = page.headers.get('content-type')
+        if(!contenttype.includes('text/html')){
+            console.log('content type not html')
+            return
+        }
+        console.log(await page.text())
+
+    }catch{
+        console.log("cannot fetch the url")
+    }
+    
+}
+
 const geturlsfrom = (htmlbody,baseurl)=>{
     
     const dom = new JSDOM(htmlbody)
@@ -51,6 +72,7 @@ const normaliseurl = (url)=>{
 
 module.exports = {
     normaliseurl,
-    geturlsfrom
+    geturlsfrom,
+    webcrawler
 }
 
